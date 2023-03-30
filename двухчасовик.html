@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Время восхода и заката Солнца</title>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <style>
+    #myInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-bottom: 10px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+
+  </style>
+</head>
+<body>
+  <h1>Время 2 часовиков</h1>
+  <p>Широта: <span id="latitude">47.74988</span></p>
+  <p>Долгота: <span id="longitude">29.53074</span></p>
+  <input type="text" id="dateInput" value="">
+  <p>Начало гражданского рассвета: <span id="civil-twilight-start"></span></p>
+  <p>Конец гражданского заката: <span id="civil-twilight-end"></span></p>
+  <p>Продолжительность светового дня: <span id="day-duration"></span></p>
+  <p>Полдень: <span id="solar-noon"></span></p>
+  <p>От гражданского рассвета до полдня: <span id="CTS-toNoonHours"></span></p>
+    <p>Длина половин 2 часовок до заката: <span id="time_half_2hours_BN"></span></p>
+  <p>От заката до рассвета: <span id="CTE-fromNoonHours"></span></p>
+    <p>Длина половин 2 часовок после заката: <span id="time_half_2hours_AN"></span></p>
+	
+	<p>1-й час это Рассвет - час <span style="color: red; font-weight: bold;"> Кролика:</span> <span id="BN1"></span></p>
+
+<p>2-й час Восход Солнца - час <span style="color: red; font-weight: bold;"> Дракона:</span> <span id="BN2"></span></p>
+
+<p>3-й час До полудня - час <span style="color: red; font-weight: bold;"> Змеи:</span> <span id="BN3"></span></p>
+
+<p>4-й час Полдень - час <span style="color: red; font-weight: bold;"> Лошади:</span> <span id="BN4"></span></p>
+
+<p>5-й час После полудня - час <span style="color: red; font-weight: bold;"> Барана:</span> <span id="BN5"></span></p>
+
+<p>6-й час Вечер - час <span style="color: red; font-weight: bold;"> Обезьяны:</span> <span id="BN6"></span></p>
+
+<p>7-й час Заход Солнца - час <span style="color: red; font-weight: bold;"> Петуха:</span> <span id="BN7"></span></p>
+
+<p>8-й час Поздние сумерки - час <span style="color: red; font-weight: bold;">Собаки:</span> <span id="BN8"></span></p>
+
+
+<p>9-й час До полуночи - час <span style="color: red; font-weight: bold;"> Свиньи:</span> <span id="BN9"></span></p>
+
+<p>10-й час Полночь - час <span style="color: red; font-weight: bold;"> Крысы:</span> <span id="BN10"></span></p>
+
+<p>11-й час После полуночи - час <span style="color: red; font-weight: bold;"> Быка:</span> <span id="BN11"></span></p>
+
+<p>12-й час Перед рассветом - час <span style="color: red; font-weight: bold;"> Тигра:</span> <span id="BN12"></span></p>
+
+<input type="text" id="myInput">
+<p id="output"></p>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+      
+  
+    // задаем GPS координаты
+var lat = 47.74988;
+var lng = 29.53074;
+
+var currentDate = new Date();
+var year = currentDate.getFullYear(); // получить год (например, 2023)
+var month = currentDate.getMonth() + 1; // получить месяц (1-12)
+var day = currentDate.getDate(); // получить день (1-31)
+var formattedDate = year + "-" + (month < 10 ? "0" : "") + month + "-" + (day < 10 ? "0" : "") + day;
+
+var date = formattedDate;
+var date = prompt("Введите дату в формате ГГГГ-ММ-ДД:", formattedDate);
+document.getElementById("dateInput").value = date;
+// отправляем запрос к Sunrise-Sunset API
+fetch('https://api.sunrise-sunset.org/json?lat=' + lat + '&lng=' + lng + '&date=' + date)
+
+  .then(response => response.json())
+  .then(data => {
+    // получаем время гражданского рассвета, восхода и заката в UTC
+    var civilTwilightStartUTC = date + 'T' + data.results.civil_twilight_begin;
+    var civil_twilight_endUTC = date + 'T' + data.results.civil_twilight_end;
+    var solar_noonUTC = date + 'T' + data.results.solar_noon;
+
+    // преобразуем время в местное время
+var dateFormat = 'YYYY-MM-DDTHH:mm:ss a';
+var civilTwilightStartLocal = moment.utc(civilTwilightStartUTC, dateFormat).local().format('HH:mm:ss');
+var civil_twilight_endUTCLocal = moment.utc(civil_twilight_endUTC, dateFormat).local().format('HH:mm:ss');
+var solar_noonUTCLocal = moment.utc(solar_noonUTC, dateFormat).local().format('HH:mm:ss');
+
+var CTStoNoonduration = moment.duration(moment(solar_noonUTCLocal, 'HH:mm:ss').diff(moment(civilTwilightStartLocal, 'HH:mm:ss')));
+var CTStoNoonHours = Math.floor(CTStoNoonduration.asHours()) + ':' + moment.utc(CTStoNoonduration.asMilliseconds()).format('mm:ss');
+
+
+
+
+var duration = moment.duration(moment(civil_twilight_endUTCLocal, 'HH:mm:ss').diff(moment(civilTwilightStartLocal, 'HH:mm:ss')));
+var daylightHours = Math.floor(duration.asHours()) + ':' + moment.utc(duration.asMilliseconds()).format('mm:ss');
+var daylightHoursUTC = date + 'T' + daylightHours;
+var daylightHoursLocal = moment.utc(daylightHours, dateFormat).local().format('HH:mm:ss');
+
+
+var CTEfromNoonduration = moment.duration(moment('00:00:00', 'HH:mm:ss').add(24, 'hours').diff(moment(daylightHours, 'HH:mm:ss')));
+
+var CTEfromNoonHours = Math.floor(CTEfromNoonduration.asHours()) + ':' + moment.utc(CTEfromNoonduration.asMilliseconds()).format('mm:ss');
+
+
+// Преобразование времени в секунды
+var timeInSeconds = moment.duration(CTStoNoonHours).asSeconds();
+
+// Деление на 7
+var timeIn7Parts = timeInSeconds / 6;
+
+// Преобразование обратно в часы, минуты и секунды
+var duration = moment.duration(timeIn7Parts, 'seconds');
+var timeIn7PartsFormatted = moment.utc(duration.asMilliseconds()).format('HH:mm:ss');
+
+/////////
+
+// Преобразование времени в секунды ПП
+var timeInSecondsPP = moment.duration(CTEfromNoonHours).asSeconds();
+
+// Деление на 7 ПП
+var timeIn7PartsPP = timeInSecondsPP / 12;
+
+// Преобразование обратно в часы, минуты и секунды ПП
+var durationPP = moment.duration(timeIn7PartsPP, 'seconds');
+var timeIn7PartsFormattedPP = moment.utc(durationPP.asMilliseconds()).format('HH:mm:ss');
+
+
+// выводим полученные значения на страницу
+document.getElementById("civil-twilight-start").innerHTML = civilTwilightStartLocal;
+document.getElementById("civil-twilight-end").innerHTML = civil_twilight_endUTCLocal;
+document.getElementById("solar-noon").innerHTML = solar_noonUTCLocal;
+
+document.getElementById("CTS-toNoonHours").innerHTML = CTStoNoonHours;
+document.getElementById("CTE-fromNoonHours").innerHTML = CTEfromNoonHours;
+
+document.getElementById("day-duration").innerHTML = daylightHours;
+
+document.getElementById("time_half_2hours_BN").innerHTML = timeIn7PartsFormatted;
+document.getElementById("time_half_2hours_AN").innerHTML = timeIn7PartsFormattedPP;
+
+
+// Преобразование времени в секунды 1
+var timeInSeconds1 = moment.duration(civilTwilightStartLocal).asSeconds();
+
+// добавить
+var CTS_Part = timeInSeconds1 + timeIn7Parts;
+var CTS_Part2 = CTS_Part + timeIn7Parts;
+var CTS_Part3 = CTS_Part2 + timeIn7Parts;
+var CTS_Part4 = CTS_Part3 + timeIn7Parts;
+var CTS_Part5 = CTS_Part4 + timeIn7Parts;
+var CTS_Part6 = CTS_Part5 + timeIn7Parts;
+var CTS_Part7 = CTS_Part6 + timeIn7Parts;
+/////
+var CTS_Part8 = CTS_Part7 + timeIn7Parts;
+var CTS_Part9 = CTS_Part8 + timeIn7Parts;
+var CTS_Part10 = CTS_Part9 + timeIn7Parts;
+var CTS_Part11 = CTS_Part10 + timeIn7Parts;
+var CTS_Part12 = CTS_Part11 + timeIn7Parts;
+///:///
+var CTS_Part13 = CTS_Part12 + timeIn7PartsPP;
+var CTS_Part14 = CTS_Part13 + timeIn7PartsPP;
+///////
+var CTS_Part15 = CTS_Part14 + timeIn7PartsPP;
+var CTS_Part16 = CTS_Part15 + timeIn7PartsPP;
+var CTS_Part17 = CTS_Part16 + timeIn7PartsPP;
+var CTS_Part18 = CTS_Part17 + timeIn7PartsPP;
+var CTS_Part19 = CTS_Part18 + timeIn7PartsPP;
+var CTS_Part20 = CTS_Part19 + timeIn7PartsPP;
+var CTS_Part21 = CTS_Part20 + timeIn7PartsPP;
+var CTS_Part22 = CTS_Part21 + timeIn7PartsPP;
+var CTS_Part23 = CTS_Part22 + timeIn7PartsPP;
+var CTS_Part24 = CTS_Part23 + timeIn7PartsPP;
+
+
+// Преобразование обратно в часы, минуты и секунды ПП
+var duration1 = moment.duration(CTS_Part, 'seconds');
+var CTS_Part1 = moment.utc(duration1.asMilliseconds()).format('HH:mm:ss');
+var duration2 = moment.duration(CTS_Part2, 'seconds');
+var CTS_Part2 = moment.utc(duration2.asMilliseconds()).format('HH:mm:ss');
+var duration3 = moment.duration(CTS_Part3, 'seconds');
+var CTS_Part3 = moment.utc(duration3.asMilliseconds()).format('HH:mm:ss');
+var duration4 = moment.duration(CTS_Part4, 'seconds');
+var CTS_Part4 = moment.utc(duration4.asMilliseconds()).format('HH:mm:ss');
+var duration5 = moment.duration(CTS_Part5, 'seconds');
+var CTS_Part5 = moment.utc(duration5.asMilliseconds()).format('HH:mm:ss');
+var duration6 = moment.duration(CTS_Part6, 'seconds');
+var CTS_Part6 = moment.utc(duration6.asMilliseconds()).format('HH:mm:ss');
+var duration7 = moment.duration(CTS_Part7, 'seconds');
+var CTS_Part7 = moment.utc(duration7.asMilliseconds()).format('HH:mm:ss');
+//////
+
+var duration8 = moment.duration(CTS_Part8, 'seconds');
+var CTS_Part8 = moment.utc(duration8.asMilliseconds()).format('HH:mm:ss');
+var duration9 = moment.duration(CTS_Part9, 'seconds');
+var CTS_Part9 = moment.utc(duration9.asMilliseconds()).format('HH:mm:ss');
+var duration10 = moment.duration(CTS_Part10, 'seconds');
+var CTS_Part10 = moment.utc(duration10.asMilliseconds()).format('HH:mm:ss');
+var duration11 = moment.duration(CTS_Part11, 'seconds');
+var CTS_Part11 = moment.utc(duration11.asMilliseconds()).format('HH:mm:ss');
+var duration12 = moment.duration(CTS_Part12, 'seconds');
+var CTS_Part12 = moment.utc(duration12.asMilliseconds()).format('HH:mm:ss');
+var duration13 = moment.duration(CTS_Part13, 'seconds');
+var CTS_Part13 = moment.utc(duration13.asMilliseconds()).format('HH:mm:ss');
+var duration14 = moment.duration(CTS_Part14, 'seconds');
+var CTS_Part14 = moment.utc(duration14.asMilliseconds()).format('HH:mm:ss');
+var duration15 = moment.duration(CTS_Part15, 'seconds');
+var CTS_Part15 = moment.utc(duration15.asMilliseconds()).format('HH:mm:ss');
+var duration16 = moment.duration(CTS_Part16, 'seconds');
+var CTS_Part16 = moment.utc(duration16.asMilliseconds()).format('HH:mm:ss');
+var duration17 = moment.duration(CTS_Part17, 'seconds');
+var CTS_Part17 = moment.utc(duration17.asMilliseconds()).format('HH:mm:ss');
+var duration18 = moment.duration(CTS_Part18, 'seconds');
+var CTS_Part18 = moment.utc(duration18.asMilliseconds()).format('HH:mm:ss');
+var duration19 = moment.duration(CTS_Part19, 'seconds');
+var CTS_Part19 = moment.utc(duration19.asMilliseconds()).format('HH:mm:ss');
+var duration20 = moment.duration(CTS_Part20, 'seconds');
+var CTS_Part20 = moment.utc(duration20.asMilliseconds()).format('HH:mm:ss');
+var duration21 = moment.duration(CTS_Part21, 'seconds');
+var CTS_Part21 = moment.utc(duration21.asMilliseconds()).format('HH:mm:ss');
+var duration22 = moment.duration(CTS_Part22, 'seconds');
+var CTS_Part22 = moment.utc(duration22.asMilliseconds()).format('HH:mm:ss');
+var duration23 = moment.duration(CTS_Part23, 'seconds');
+var CTS_Part23 = moment.utc(duration23.asMilliseconds()).format('HH:mm:ss');
+var duration24 = moment.duration(CTS_Part24, 'seconds');
+var CTS_Part24 = moment.utc(duration24.asMilliseconds()).format('HH:mm:ss');
+
+
+document.getElementById("BN1").innerHTML = civilTwilightStartLocal + " - " + CTS_Part1 + " - " + CTS_Part2;
+document.getElementById("BN2").innerHTML = CTS_Part2 + " - " + CTS_Part3 + " - " + CTS_Part4;
+document.getElementById("BN3").innerHTML = CTS_Part4 + " - " + CTS_Part5 + " - " + CTS_Part6;
+document.getElementById("BN4").innerHTML = CTS_Part6 + " - " + CTS_Part7 + " - " + CTS_Part8;
+////
+document.getElementById("BN5").innerHTML = CTS_Part8 + " - " + CTS_Part9 + " - " + CTS_Part10;
+document.getElementById("BN6").innerHTML = CTS_Part10 + " - " + CTS_Part11 + " - " + CTS_Part12;
+document.getElementById("BN7").innerHTML = CTS_Part12 + " - " + CTS_Part13 + " - " + CTS_Part14;
+document.getElementById("BN8").innerHTML = CTS_Part14 + " - " + CTS_Part15 + " - " + CTS_Part16;
+document.getElementById("BN9").innerHTML = CTS_Part16 + " - " + CTS_Part17 + " - " + CTS_Part18;
+document.getElementById("BN10").innerHTML = CTS_Part18 + " - " + CTS_Part19 + " - " + CTS_Part20;
+document.getElementById("BN11").innerHTML = CTS_Part20 + " - " + CTS_Part21 + " - " + CTS_Part22;
+document.getElementById("BN12").innerHTML = CTS_Part22 + " - " + CTS_Part23 + " - " + CTS_Part24;
+
+  
+      var inputElement = document.getElementById("myInput");
+      var outputElement = document.getElementById("output");
+
+      inputElement.addEventListener("input", function() {
+        var inputText = inputElement.value;
+		var maxWidth = inputElement.offsetWidth;
+		var canvas = document.createElement("canvas");
+  var ctx = canvas.getContext("2d");
+  ctx.font = window.getComputedStyle(inputElement).getPropertyValue("font");
+
+  var textWidth = ctx.measureText(inputText).width;
+
+ 
+		//inputElement.setAttribute("size", inputText.length);
+        var regex = /.{0,16}\((.*?)\)/g;
+        var matches = inputText.match(regex);
+ if (matches) {
+var result = matches.map(function(match) {
+match = match.replace(/\s{2,}/g, ' ');
+if (match.includes("первая половина часа Кролика")) {
+return match + " + " + civilTwilightStartLocal + " - " + CTS_Part1;
+} else if (match.includes("вторая половина часа Кролика")) {
+return match + " + " + CTS_Part1 + " - " + CTS_Part2;
+} else if (match.includes("первая половина часа Дракона")) {
+return match + " + " + CTS_Part2 + " - " + CTS_Part3;
+} else if (match.includes("вторая половина часа Дракона")) {
+return match + " + " + CTS_Part3 + " - " + CTS_Part4;
+} else if (match.includes("первая половина часа Змеи")) {
+return match + " + " + CTS_Part4 + " - " + CTS_Part5;
+} else if (match.includes("вторая половина часа Змеи")) {
+return match + " + " + CTS_Part5 + " - " + CTS_Part6;
+} else if (match.includes("первая половина часа Лошади")) {
+return match + " + " + CTS_Part6 + " - " + CTS_Part7;
+} else if (match.includes("вторая половина часа Лошади")) {
+return match + " + " + CTS_Part7 + " - " + CTS_Part8;
+} else if (match.includes("первая половина часа Барана")) {
+return match + " + " + CTS_Part8 + " - " + CTS_Part9;
+} else if (match.includes("вторая половина часа Барана")) {
+return match + " + " + CTS_Part9 + " - " + CTS_Part10;
+} else if (match.includes("первая половина часа Обезьяны")) {
+return match + " + " + CTS_Part10 + " - " + CTS_Part11;
+} else if (match.includes("вторая половина часа Обезьяны")) {
+return match + " + " + CTS_Part11 + " - " + CTS_Part12;
+} else if (match.includes("первая половина часа Петуха")) {
+return match + " + " + CTS_Part12 + " - " + CTS_Part13;
+} else if (match.includes("вторая половина часа Петуха")) {
+return match + " + " + CTS_Part13 + " - " + CTS_Part14;
+} else if (match.includes("первая половина часа Собаки")) {
+return match + " + " + CTS_Part14 + " - " + CTS_Part15;
+} else if (match.includes("вторая половина часа Собаки")) {
+return match + " + " + CTS_Part15 + " - " + CTS_Part16;
+} else if (match.includes("первая половина часа Свиньи")) {
+return match + " + " + CTS_Part16 + " - " + CTS_Part17;
+} else if (match.includes("вторая половина часа Свиньи")) {
+return match + " + " + CTS_Part17 + " - " + CTS_Part18;
+} else if (match.includes("первая половина часа Крысы")) {
+return match + " + " + CTS_Part18 + " - " + CTS_Part19;
+} else if (match.includes("вторая половина часа Крысы")) {
+return match + " + " + CTS_Part19 + " - " + CTS_Part20;
+} else if (match.includes("первая половина часа Быка")) {
+return match + " + " + CTS_Part20 + " - " + CTS_Part21;
+} else if (match.includes("вторая половина часа Быка")) {
+return match + " + " + CTS_Part21 + " - " + CTS_Part22;
+} else if (match.includes("первая половина часа Тигра")) {
+return match + " + " + CTS_Part22 + " - " + CTS_Part23;
+} else if (match.includes("вторая половина часа Тигра")) {
+return match + " + " + CTS_Part23 + " - " + CTS_Part24;
+          } else {
+            return match;
+          }
+		  
+        }).join("<br>");
+
+          outputElement.innerHTML = result;
+        } else {
+          outputElement.innerHTML = "";
+        }
+      });
+    });
+
+if (inputElement.scrollWidth > inputElement.clientWidth) {
+  inputElement.style.whiteSpace = "normal";
+} else {
+  inputElement.style.whiteSpace = "nowrap";
+}
+
+})
+.catch(error => {
+  console.error(error);
+  console.error('Failed to fetch data from API');
+});
+
+</script>
+
+</body>
+</html>
